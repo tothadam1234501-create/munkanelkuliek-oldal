@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Munkanélküliek – Klubkezelő</title>
+<style>
+  :root{
+    --gold:#e9b730; --bg:#060d1f; --panel:#0b1730; --text:#e8edf7;
+    --gold2:color-mix(in srgb,var(--gold) 70%,white);
+    --line:color-mix(in srgb,var(--panel) 65%,#5b7fc7);
+    --muted:color-mix(in srgb,var(--text) 65%,var(--bg));
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 0%, color-mix(in srgb,var(--bg) 60%,#2a58b8), transparent 55%),
+      radial-gradient(ellipse at 80% 100%, color-mix(in srgb,var(--bg) 70%,#1f8f4f), transparent 55%),
+      var(--bg);
+    color:var(--text); min-height:100vh; display:flex;
+  }
+  /* SIDEBAR */
+  aside{
+    width:230px; flex-shrink:0; background:color-mix(in srgb,var(--bg) 85%,black);
+    border-right:1px solid var(--line); display:flex; flex-direction:column; padding:14px 0;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .logo-box{display:flex;justify-content:center;padding:6px 0 18px}
+  nav{display:flex;flex-direction:column}
+  nav button{
+    background:none;border:none;color:var(--text);text-align:left;font-size:16px;
+    display:flex;align-items:center;gap:14px;padding:13px 22px;cursor:pointer;
+    font-weight:600;transition:.15s;
+  }
+  nav button:hover{background:color-mix(in srgb,var(--gold) 15%,transparent)}
+  nav button.active{background:var(--gold);color:#101828}
+  nav button .ic{font-size:20px;width:26px;text-align:center}
+  .side-slogan{
+    margin:auto 18px 10px; font-style:italic; font-size:19px; color:var(--muted);
+    transform:rotate(-8deg); line-height:1.25; text-align:center; padding-top:20px;
+  }
+  .side-slogan::after{content:"";display:block;height:4px;margin:10px auto 0;width:75%;
+    background:linear-gradient(90deg,transparent,var(--gold));border-radius:4px}
+
+  .crest-slot{display:inline-block;flex-shrink:0}
+  .crest-slot > svg, .crest-slot > img{width:100%;height:100%;display:block;object-fit:contain}
+  .crest-lg{width:130px;height:150px}
+  .crest-md{width:100px;height:115px}
+
+  /* MAIN */
+  main{flex:1;padding:0 22px 22px;min-width:0}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 0 12px;border-bottom:3px solid var(--gold);margin-bottom:18px;flex-wrap:wrap;
+  }
+  header h1{font-size:46px;font-style:italic;font-weight:800;letter-spacing:.5px;line-height:1.05}
+  header p{font-style:italic;color:var(--gold2);font-size:19px;margin-top:4px}
+  .topbar{display:flex;gap:22px;align-items:center;font-size:14px}
+  .topbar span{display:flex;gap:8px;align-items:center}
+  .topbar .sep{width:1px;height:26px;background:var(--line)}
+  .topbar button{background:none;border:none;color:var(--text);cursor:pointer;font-size:14px;display:flex;gap:8px;align-items:center}
+  .topbar button:hover{color:var(--gold)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .card{
+    background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 88%,#2a4a8a),var(--panel));
+    border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+    box-shadow:0 6px 24px rgba(0,0,0,.35);position:relative;overflow:hidden;
+  }
+  .card h2{font-size:20px;font-style:italic;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .card h2 .ic{font-size:22px}
+  .card h3{color:var(--gold);font-size:18px;margin:14px 0 8px}
+  .full{grid-column:1/-1}
+
+  .club-info{display:flex;gap:22px;align-items:center}
+  .club-info .vr{width:1px;align-self:stretch;background:var(--line)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+  .kv .k{color:var(--muted)} .kv .v{font-weight:700;font-size:17px}
+  .small .k{font-size:14px} .small .v{font-weight:500;font-size:14px}
+  hr{border:none;border-top:1px solid var(--gold);opacity:.5;margin:12px 0}
+
+  .match{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .match .teams{display:flex;align-items:center;gap:18px;flex:1;justify-content:center}
+  .vs{font-size:34px;font-weight:900;font-style:italic;color:var(--gold)}
+  .match .info{border-left:1px solid var(--line);padding-left:16px;font-size:14px;color:var(--muted)}
+  .match .info b{display:block;color:var(--text);font-size:19px;margin-bottom:12px}
+  .match-caption{text-align:center;font-size:13px;margin-top:6px;color:var(--muted)}
+  .countdown{margin-top:10px;text-align:center;color:var(--gold2);font-weight:700}
+
+  .roles{display:grid;grid-template-columns:90px 1fr;gap:6px 14px;font-size:16px}
+  .roles .k{font-weight:700} .roles .v{color:color-mix(in srgb,var(--text) 85%,var(--bg))}
+  .players{display:flex;flex-wrap:wrap;gap:16px 14px;margin-top:8px;position:relative;z-index:1}
+  .pgroup{display:flex;flex-direction:column;gap:6px}
+  .pgroup .cap{font-weight:800;color:var(--gold);font-size:14px}
+  .pgroup .row{display:flex;gap:14px;flex-wrap:wrap}
+  .player{
+    width:98px;border:2px solid var(--gold);border-radius:6px;overflow:hidden;background:#0a1226;
+    text-align:center;transition:.15s;
+  }
+  .player:hover{transform:translateY(-3px);box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 35%,transparent)}
+  .player .ph{height:78px;background:linear-gradient(180deg,#26324d,#0f1730);overflow:hidden}
+  .player.gk .ph{background:linear-gradient(180deg,#2f8f3a,#16521e)}
+  .player .ph img,.player .ph svg{width:100%;height:100%;object-fit:cover;display:block}
+  .player .nm{font-size:12px;font-weight:700;padding:4px 2px;background:rgba(0,0,0,.6);line-height:1.15;min-height:32px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .empty{color:var(--muted);font-size:14px;font-style:italic}
+  .handball-bg{position:absolute;right:20px;top:60px;font-size:190px;opacity:.14;filter:grayscale(1);pointer-events:none}
+  .hb-title{
+    position:absolute;right:30px;bottom:34px;text-align:right;font-style:italic;font-weight:800;
+    font-size:30px;line-height:1.1;color:#b9c6e4;transform:rotate(-6deg);max-width:60%;pointer-events:none
+  }
+  .hb-title::after{content:"";display:block;height:6px;margin-top:8px;border-radius:6px;
+    background:linear-gradient(90deg,transparent,var(--gold))}
+  .hb-card{min-height:380px;padding-bottom:110px}
+
+  .view{display:none} .view.active{display:block}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  .tag{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;background:color-mix(in srgb,var(--gold) 20%,transparent);color:var(--gold2)}
+  .soon{padding:60px 20px;text-align:center;color:var(--muted);font-size:18px}
+
+  /* TESTRESZABÁS */
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+  .field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+  .field.wide{grid-column:1/-1}
+  input[type=text],input[type=datetime-local],select{
+    background:color-mix(in srgb,var(--bg) 80%,black);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:7px;font-size:15px;font-family:inherit;width:100%;
+  }
+  input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
+  input[type=color]{width:100%;height:40px;border:1px solid var(--line);border-radius:7px;background:none;padding:2px;cursor:pointer}
+  .check{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--text);cursor:pointer}
+  .check input{width:18px;height:18px;accent-color:var(--gold)}
+  .btn{
+    background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--gold2);border:1px solid var(--gold);
+    padding:8px 14px;border-radius:7px;font-weight:700;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{background:var(--gold);color:#101828}
+  .btn.danger{border-color:#d9534f;color:#ff8a86;background:rgba(217,83,79,.12)}
+  .btn.danger:hover{background:#d9534f;color:#fff}
+  .btn.sm{padding:6px 10px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  .logo-edit{display:flex;gap:14px;align-items:center}
+  .prow{display:grid;grid-template-columns:44px 1fr 150px auto auto;gap:8px;align-items:center;margin-bottom:8px}
+  .pthumb{width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid var(--gold);background:#0f1730}
+  .pthumb img,.pthumb svg{width:100%;height:100%;object-fit:cover;display:block}
+  .hint{color:var(--muted);font-size:13px;margin-bottom:10px}
+  /* BELÉPÉS / JOGOSULTSÁGOK */
+  input[type=password]{
+    background:color-mix(in srgb,var(--bg) 80%,black);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:7px;font-size:15px;font-family:inherit;width:100%;
+  }
+  input[type=password]:focus{outline:2px solid var(--gold)}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:22px;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+  .modal h2{margin-bottom:6px;font-style:italic;font-size:22px}
+  .modal p{color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.4}
+  .modal .field{margin-bottom:10px}
+  .modal .check{margin-bottom:6px}
+  .err{color:#ff8a86;font-size:13px;min-height:18px;margin:4px 0}
+  .urow{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .urow > div:first-child{flex:1;min-width:200px}
+  .urow small{color:var(--muted)}
+  .check.sm{font-size:13px}
+  .btn.locked,.card.locked{display:none}
+  .locked .mdel{display:none}
+
+  /* STATISZTIKA / BEÁLLÍTÁSOK / MÉRKŐZÉSEK */
+  input[type=number]{
+    background:color-mix(in srgb,var(--bg) 80%,black);border:1px solid var(--line);color:var(--text);
+    padding:8px 8px;border-radius:7px;font-size:15px;font-family:inherit;width:100%;
+  }
+  input[type=number]:focus{outline:2px solid var(--gold)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:color-mix(in srgb,var(--bg) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi b{display:block;font-size:28px;color:var(--gold2);line-height:1.15}
+  .kpi span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .form-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .chip{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#101828}
+  .chip.W{background:#4ade80}.chip.D{background:#fbbf24}.chip.L{background:#f87171}
+  .wdl{display:flex;height:26px;border-radius:7px;overflow:hidden;margin:8px 0 14px;background:var(--line)}
+  .wdl div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#101828;min-width:0}
+  .recent{display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .recent div{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .recent small{color:var(--muted);min-width:110px}
+  .lead{display:flex;flex-direction:column;gap:8px}
+  .lrow{display:grid;grid-template-columns:24px 1fr 40px;gap:4px 8px;align-items:center;font-size:14px}
+  .lrow small{color:var(--muted)}
+  .lrow .val{font-weight:800;color:var(--gold2);text-align:right}
+  .lrow .bar{grid-column:2/4;height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+  .lrow .bar i{display:block;height:100%;background:var(--gold)}
+  .scroll{overflow-x:auto}
+  .mrow{display:grid;grid-template-columns:185px 118px minmax(150px,1fr) 108px minmax(150px,1fr) 62px 62px 104px 40px;gap:8px;align-items:center;margin-bottom:8px;min-width:1000px}
+  .srow{display:grid;grid-template-columns:minmax(170px,1fr) repeat(5,80px);gap:8px;align-items:center;margin-bottom:8px;min-width:640px}
+  .mhead{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .setrow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .setrow:last-of-type{border-bottom:none}
+  .setrow .t b{display:block;font-size:15px}
+  .setrow .t small{color:var(--muted);font-size:13px}
+  .setrow select,.setrow input[type=number]{width:170px;flex-shrink:0}
+  .switch{appearance:none;-webkit-appearance:none;width:44px;height:24px;border-radius:24px;background:var(--line);position:relative;cursor:pointer;transition:.2s;flex-shrink:0;border:none}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .switch:checked{background:var(--gold)}
+  .switch:checked::after{left:23px}
+  body.compact .card{padding:10px 12px}
+  body.compact .grid{gap:10px}
+  body.compact header{padding:8px 0}
+  body.noanim *{transition:none!important}
+  body.noanim .player:hover{transform:none;box-shadow:none}
+
+  #toast{
+    position:fixed;right:20px;bottom:20px;background:var(--gold);color:#101828;padding:9px 16px;
+    border-radius:8px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:50
+  }
+  #toast.show{opacity:1}
+
+  @media(max-width:1100px){
+    body{flex-direction:column}
+    aside{width:100%;height:auto;position:static;flex-direction:row;overflow-x:auto;padding:6px}
+    .logo-box,.side-slogan{display:none}
+    nav{flex-direction:row} nav button{white-space:nowrap;padding:10px 14px}
+    .grid{grid-template-columns:1fr}
+    header h1{font-size:34px}
+    .form-grid{grid-template-columns:1fr}
+    .prow{grid-template-columns:44px 1fr auto auto}
+    .prow select{grid-column:2/-1}
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG definíciók -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="crest" viewBox="0 0 200 230">
+      <path d="M100 6 L186 30 V120 C186 170 150 205 100 224 C50 205 14 170 14 120 V30 Z" fill="#0b1b3d" stroke="#e9b730" stroke-width="6"/>
+      <path d="M100 16 L176 37 V120 C176 163 144 194 100 212 C56 194 24 163 24 120 V37 Z" fill="none" stroke="#e9b730" stroke-width="1.5" opacity=".6"/>
+      <rect x="28" y="36" width="144" height="30" rx="3" fill="#0a1530" stroke="#e9b730" stroke-width="2"/>
+      <text id="crestName" x="100" y="58" text-anchor="middle" font-family="Segoe UI,Arial" font-weight="800" font-size="17" fill="#fff">MUNKANÉLKÜLIEK</text>
+      <circle cx="100" cy="112" r="34" fill="#fff" stroke="#e9b730" stroke-width="3"/>
+      <polygon points="100,94 113,103 108,118 92,118 87,103" fill="#111"/>
+      <g stroke="#111" stroke-width="2.5"><line x1="100" y1="94" x2="100" y2="80"/><line x1="113" y1="103" x2="126" y2="98"/><line x1="108" y1="118" x2="118" y2="130"/><line x1="92" y1="118" x2="82" y2="130"/><line x1="87" y1="103" x2="74" y2="98"/></g>
+      <path d="M50 172 C34 152 32 128 42 108" fill="none" stroke="#e9b730" stroke-width="3" stroke-linecap="round"/>
+      <path d="M150 172 C166 152 168 128 158 108" fill="none" stroke="#e9b730" stroke-width="3" stroke-linecap="round"/>
+      <text id="crestYear" x="100" y="196" text-anchor="middle" font-family="Segoe UI,Arial" font-weight="800" font-size="18" fill="#fff">2024</text>
+    </symbol>
+    <symbol id="crest2" viewBox="0 0 200 230">
+      <path d="M100 6 L186 30 V120 C186 170 150 205 100 224 C50 205 14 170 14 120 V30 Z" fill="#fff" stroke="#1d4fb5" stroke-width="6"/>
+      <g fill="#1d4fb5"><rect x="22" y="30" width="22" height="170"/><rect x="64" y="30" width="22" height="190"/><rect x="114" y="30" width="22" height="190"/><rect x="156" y="30" width="22" height="170"/></g>
+      <path d="M100 6 L186 30 V120 C186 170 150 205 100 224 C50 205 14 170 14 120 V30 Z" fill="none" stroke="#1d4fb5" stroke-width="6"/>
+      <rect x="22" y="40" width="156" height="34" fill="#fff" stroke="#1d4fb5" stroke-width="2"/>
+      <text id="oppL1" x="100" y="56" text-anchor="middle" font-family="Segoe UI,Arial" font-weight="800" font-size="11" fill="#1d4fb5">KÓNYI ÁLT. ISKOLAI</text>
+      <text id="oppL2" x="100" y="70" text-anchor="middle" font-family="Segoe UI,Arial" font-weight="800" font-size="12" fill="#1d4fb5">CSORNAI SE</text>
+      <rect x="52" y="95" width="96" height="62" rx="4" fill="#fff" stroke="#1d4fb5" stroke-width="3"/>
+      <line x1="100" y1="95" x2="100" y2="157" stroke="#1d4fb5" stroke-width="3"/>
+      <g stroke="#1d4fb5" stroke-width="2"><line x1="62" y1="110" x2="92" y2="110"/><line x1="62" y1="122" x2="92" y2="122"/><line x1="108" y1="110" x2="138" y2="110"/><line x1="108" y1="122" x2="138" y2="122"/></g>
+    </symbol>
+    <symbol id="avatar" viewBox="0 0 100 80">
+      <circle cx="50" cy="30" r="17" fill="#d9b497"/>
+      <path d="M33 26 C33 8 67 8 67 26 C60 18 40 18 33 26Z" fill="#2b2118"/>
+      <path d="M8 80 C10 54 28 50 50 50 C72 50 90 54 92 80Z" fill="#14161c"/>
+      <path d="M38 52 L50 62 L62 52" fill="none" stroke="#e9b730" stroke-width="2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<aside>
+  <div class="logo-box"><span class="crest-slot crest-lg" data-crest="own"></span></div>
+  <nav id="nav">
+    <button data-view="home" class="active"><span class="ic">🏠</span>Főoldal</button>
+    <button data-view="teams"><span class="ic">🏆</span>Csapatok</button>
+    <button data-view="matches"><span class="ic">📅</span>Mérkőzések</button>
+    <button data-view="stats"><span class="ic">📊</span>Statisztikák</button>
+    <button data-view="mgmt"><span class="ic">👥</span>Csapatirányítás</button>
+    <button data-view="transfers"><span class="ic">🤝</span>Átigazolások</button>
+    <button data-view="settings"><span class="ic">⚙️</span>Beállítások</button>
+    <button data-view="custom"><span class="ic">🎨</span>Testreszabás</button>
+  </nav>
+  <div class="side-slogan" id="sideSlogan"></div>
+</aside>
+
+<main>
+  <header>
+    <div>
+      <h1 id="hName"></h1>
+      <p id="hSlogan"></p>
+    </div>
+    <div class="topbar">
+      <span id="hMode"></span><div class="sep"></div>
+      <span>👤 <b id="hOwner"></b></span><div class="sep"></div>
+      <button id="btnPw" style="display:none">🔑 Jelszó</button>
+      <button id="btnAuth"></button>
+    </div>
+  </header>
+
+  <!-- FŐOLDAL -->
+  <section class="view active" id="view-home">
+    <div class="grid">
+      <div class="card">
+        <h2>Klubinformáció</h2>
+        <div class="club-info">
+          <span class="crest-slot crest-lg" data-crest="own"></span>
+          <div class="vr"></div>
+          <div style="flex:1">
+            <div class="kv"><span class="k">Elnök:</span><span class="v" id="iPres"></span>
+              <span class="k">Alelnök:</span><span class="v" id="iVp"></span></div>
+            <hr>
+            <div class="kv small"><span class="k">Klub székhelye:</span><span class="v" id="iSeat"></span>
+              <span class="k">Alapítás éve:</span><span class="v" id="iFounded"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="cardMatch">
+        <h2>Következő mérkőzés</h2>
+        <div class="match">
+          <div class="teams">
+            <span class="crest-slot crest-md" data-crest="own"></span>
+            <span class="vs">VS</span>
+            <span class="crest-slot crest-md" data-crest="opp"></span>
+          </div>
+          <div class="info">
+            Időpont:<b id="mDate"></b>
+            Helyszín:<b id="mVenue" style="font-size:16px;margin:2px 0 0"></b>
+          </div>
+        </div>
+        <div class="match-caption" id="mCaption"></div>
+        <div class="countdown" id="countdown"></div>
+      </div>
+
+      <div class="card" id="cardFootball">
+        <h2><span class="ic">⚽</span><span id="fTitle"></span></h2>
+        <div class="roles">
+          <span class="k">Elnök:</span><span class="v" id="fPres"></span>
+          <span class="k">Alelnök:</span><span class="v" id="fVp"></span>
+          <span class="k">Edző:</span><span class="v" id="fCoach"></span>
+        </div>
+        <h3>Játékoskeret</h3>
+        <div class="players" id="fPlayers"></div>
+      </div>
+
+      <div class="card hb-card" id="cardHandball">
+        <h2><span class="ic">🤾</span><span id="hbTitle"></span></h2>
+        <div class="roles">
+          <span class="k">Elnök:</span><span class="v" id="hbPres"></span>
+          <span class="k">Alelnök:</span><span class="v" id="hbVp"></span>
+          <span class="k">Edző:</span><span class="v" id="hbCoach"></span>
+        </div>
+        <h3>Játékoskeret</h3>
+        <div class="players" id="hbPlayers"></div>
+        <div class="handball-bg">🤾</div>
+        <div class="hb-title" id="hbBig"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CSAPATOK -->
+  <section class="view" id="view-teams">
+    <div class="card">
+      <h2>Csapatok</h2>
+      <table id="teamsTable"></table>
+    </div>
+  </section>
+
+  <!-- MÉRKŐZÉSEK -->
+  <section class="view" id="view-matches">
+    <div class="card" style="margin-bottom:16px">
+      <h2>📅 Következő mérkőzés</h2>
+      <div id="nextMatchBox" data-area="matches"></div>
+    </div>
+    <div class="card">
+      <h2>🏟️ Mérkőzések és eredmények</h2>
+      <p class="hint">Az eredmények (Mi / Ők gólok) kitöltése után a mérkőzés bekerül a statisztikákba. Üresen hagyott eredmény = még nem játszották le.</p>
+      <div class="btns" style="margin:0 0 12px"><button class="btn" id="addMatch" data-area="matches">＋ Új mérkőzés</button></div>
+      <div class="scroll"><div id="matchesEditor" data-area="matches"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-stats">
+    <div class="card" style="margin-bottom:16px">
+      <h2>📊 Statisztikák</h2>
+      <div class="btns" style="margin:0">
+        <label class="field" style="flex-direction:row;align-items:center;gap:10px">Sportág:
+          <select id="statSport" style="width:auto">
+            <option value="all">Összes</option><option value="football">Labdarúgás</option><option value="handball">Kézilabda</option>
+          </select>
+        </label>
+        <button class="btn" id="demoData" data-area="matches">✨ Mintaadatok betöltése</button>
+        <button class="btn" onclick="go('matches')">Eredmények felvitele →</button>
+      </div>
+    </div>
+    <div id="statsOut"></div>
+    <div class="card" style="margin-top:16px">
+      <h2>✏️ Játékos statisztikák szerkesztése</h2>
+      <div class="scroll"><div id="statEditor" data-area="matches"></div></div>
+    </div>
+  </section>
+  <section class="view" id="view-mgmt"><div class="card soon">👥 Csapatirányítás – hamarosan</div></section>
+  <section class="view" id="view-transfers"><div class="card soon">🤝 Átigazolások – hamarosan</div></section>
+  <section class="view" id="view-settings" data-area="owner">
+    <p class="hint">A beállítások azonnal életbe lépnek, és automatikusan mentődnek ebben a böngészőben.</p>
+    <div class="grid">
+      <div class="card">
+        <h2>🖥️ Megjelenés</h2>
+        <div class="setrow"><div class="t"><b>Betűméret</b><small>Az egész felület méretezése</small></div>
+          <select data-bind="settings.fontScale"><option value="small">Kicsi</option><option value="normal">Normál</option><option value="large">Nagy</option></select></div>
+        <div class="setrow"><div class="t"><b>Kompakt nézet</b><small>Kisebb kártyák és távolságok</small></div>
+          <input type="checkbox" class="switch" data-bind="settings.compact"></div>
+        <div class="setrow"><div class="t"><b>Animációk</b><small>Átmenetek és mozgó effektek</small></div>
+          <input type="checkbox" class="switch" data-bind="settings.animations"></div>
+        <div class="setrow"><div class="t"><b>Mentés értesítés</b><small>„Mentve ✓" üzenet megjelenítése</small></div>
+          <input type="checkbox" class="switch" data-bind="settings.toasts"></div>
+      </div>
+
+      <div class="card">
+        <h2>🏠 Főoldal és dátumok</h2>
+        <div class="setrow"><div class="t"><b>Visszaszámláló</b><small>Idő a következő meccsig</small></div>
+          <input type="checkbox" class="switch" data-bind="settings.showCountdown"></div>
+        <div class="setrow"><div class="t"><b>Dátum formátuma</b><small>Hogyan jelenjen meg az időpont</small></div>
+          <select data-bind="settings.dateFormat"><option value="hu">2025.05.17. 16:00</option><option value="iso">2025-05-17 16:00</option><option value="long">2025. május 17., 16:00</option></select></div>
+        <div class="setrow"><div class="t"><b>Kezdőoldal</b><small>Ez nyílik meg induláskor</small></div>
+          <select data-bind="settings.startView"><option value="home">Főoldal</option><option value="teams">Csapatok</option><option value="matches">Mérkőzések</option><option value="stats">Statisztikák</option></select></div>
+      </div>
+
+      <div class="card">
+        <h2>📑 Menüpontok</h2>
+        <div class="setrow"><div class="t"><b>Csapatok</b></div><input type="checkbox" class="switch" data-bind="settings.nav.teams"></div>
+        <div class="setrow"><div class="t"><b>Mérkőzések</b></div><input type="checkbox" class="switch" data-bind="settings.nav.matches"></div>
+        <div class="setrow"><div class="t"><b>Statisztikák</b></div><input type="checkbox" class="switch" data-bind="settings.nav.stats"></div>
+        <div class="setrow"><div class="t"><b>Csapatirányítás</b></div><input type="checkbox" class="switch" data-bind="settings.nav.mgmt"></div>
+        <div class="setrow"><div class="t"><b>Átigazolások</b></div><input type="checkbox" class="switch" data-bind="settings.nav.transfers"></div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Statisztika</h2>
+        <div class="setrow"><div class="t"><b>Pont győzelemért</b><small>A tabellapontok számításához</small></div>
+          <input type="number" min="0" data-bind="settings.pointsWin"></div>
+        <div class="setrow"><div class="t"><b>Pont döntetlenért</b></div>
+          <input type="number" min="0" data-bind="settings.pointsDraw"></div>
+        <div class="setrow"><div class="t"><b>Statisztikák törlése</b><small>Minden mérkőzés és játékosstatisztika</small></div>
+          <button class="btn danger" id="clearStats">Törlés</button></div>
+      </div>
+
+      <div class="card full">
+        <h2>👥 Felhasználók és jogosultságok</h2>
+        <p class="hint">Itt döntheted el, ki szerkesztheti az oldalt. Aki nincs bejelentkezve, vendégként csak olvashat. A tulajdonos mindent szerkeszthet.</p>
+        <div id="userList"></div>
+        <h3>Új felhasználó</h3>
+        <form id="fNewUser" class="form-grid">
+          <label class="field">Név<input type="text" id="nuName" autocomplete="off"></label>
+          <label class="field">Felhasználónév<input type="text" id="nuUser" autocomplete="off"></label>
+          <label class="field">Ideiglenes jelszó (min. 8 karakter)<input type="password" id="nuPw" autocomplete="new-password"></label>
+          <div class="field">Engedélyek
+            <label class="check sm"><input type="checkbox" id="nuC"> Tartalom szerkesztése (Testreszabás)</label>
+            <label class="check sm"><input type="checkbox" id="nuM" checked> Mérkőzések és statisztikák szerkesztése</label>
+          </div>
+          <div class="btns wide"><button class="btn" type="submit">＋ Felhasználó létrehozása</button></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTRESZABÁS -->
+  <section class="view" id="view-custom" data-area="content">
+    <p class="hint">Minden módosítás azonnal érvényesül, és automatikusan mentődik ebben a böngészőben.</p>
+    <div class="grid">
+
+      <div class="card">
+        <h2>🏷️ Klub adatai</h2>
+        <div class="form-grid">
+          <label class="field">Klub neve<input type="text" data-bind="club.name"></label>
+          <label class="field">Alapítás éve<input type="text" data-bind="club.founded"></label>
+          <label class="field wide">Mottó (fejléc)<input type="text" data-bind="club.slogan"></label>
+          <label class="field wide">Mottó (oldalsáv)<input type="text" data-bind="club.sideSlogan"></label>
+          <label class="field">Elnök<input type="text" data-bind="club.president"></label>
+          <label class="field">Alelnök<input type="text" data-bind="club.vp"></label>
+          <label class="field">Székhely<input type="text" data-bind="club.seat"></label>
+                  </div>
+      </div>
+
+      <div class="card">
+        <h2>🎨 Megjelenés</h2>
+        <div class="form-grid">
+          <label class="field">Kiemelő szín (arany)<input type="color" data-bind="colors.accent"></label>
+          <label class="field">Háttérszín<input type="color" data-bind="colors.bg"></label>
+          <label class="field">Kártyák színe<input type="color" data-bind="colors.panel"></label>
+          <label class="field">Szövegszín<input type="color" data-bind="colors.text"></label>
+        </div>
+        <h3>Klub logó</h3>
+        <div class="logo-edit">
+          <span class="crest-slot crest-md" data-crest="own"></span>
+          <div class="btns" style="margin:0">
+            <label class="btn">📁 Logó feltöltése<input type="file" accept="image/*" hidden id="logoOwn"></label>
+            <button class="btn danger" id="logoOwnReset">Alap címer</button>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="presetGold">Arany/Sötétkék</button>
+          <button class="btn" id="presetRed">Piros/Fekete</button>
+          <button class="btn" id="presetGreen">Zöld/Sötét</button>
+          <button class="btn" id="presetLight">Világos</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Következő mérkőzés</h2>
+        <div class="form-grid">
+          <label class="check wide field"><input type="checkbox" data-bind="match.show"> Kártya megjelenítése a főoldalon</label>
+          <label class="field">Időpont<input type="datetime-local" data-bind="match.date"></label>
+          <label class="field">Ellenfél<input type="text" data-bind="match.opponent"></label>
+          <label class="field wide">Helyszín<input type="text" data-bind="match.venue"></label>
+          <label class="field">Sportág
+            <select data-bind="match.sport"><option value="football">Labdarúgás</option><option value="handball">Kézilabda</option></select>
+          </label>
+          <p class="hint" style="align-self:end">Meccs után a Mérkőzések fülön rögzítheted az eredményt.</p>
+        </div>
+        <h3>Ellenfél logója</h3>
+        <div class="logo-edit">
+          <span class="crest-slot crest-md" data-crest="opp"></span>
+          <div class="btns" style="margin:0">
+            <label class="btn">📁 Logó feltöltése<input type="file" accept="image/*" hidden id="logoOpp"></label>
+            <button class="btn danger" id="logoOppReset">Alap címer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>💾 Adatok kezelése</h2>
+        <p class="hint">Mentsd le a beállításaidat fájlba, vagy töltsd vissza egy korábbi mentést. Az alaphelyzetre állítás mindent töröl.</p>
+        <div class="btns">
+          <button class="btn" id="btnExport">⬇ Exportálás (JSON)</button>
+          <label class="btn">⬆ Importálás<input type="file" accept="application/json" hidden id="btnImport"></label>
+          <button class="btn danger" id="btnReset">↺ Alaphelyzet</button>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>⚽ Focicsapat</h2>
+        <div class="form-grid">
+          <label class="check wide field"><input type="checkbox" data-bind="football.show"> Kártya megjelenítése a főoldalon</label>
+          <label class="field">Csapat neve<input type="text" data-bind="football.title"></label>
+          <label class="field">Edző<input type="text" data-bind="football.coach"></label>
+          <label class="field">Elnök<input type="text" data-bind="football.president"></label>
+          <label class="field">Alelnök<input type="text" data-bind="football.vp"></label>
+        </div>
+        <h3>Játékosok</h3>
+        <div id="edFootball"></div>
+        <div class="btns"><button class="btn" data-add="football">＋ Új játékos</button></div>
+      </div>
+
+      <div class="card full">
+        <h2>🤾 Kézilabda csapat</h2>
+        <div class="form-grid">
+          <label class="check wide field"><input type="checkbox" data-bind="handball.show"> Kártya megjelenítése a főoldalon</label>
+          <label class="field">Csapat neve<input type="text" data-bind="handball.title"></label>
+          <label class="field">Nagy felirat a kártyán<input type="text" data-bind="handball.bigTitle"></label>
+          <label class="field">Edző<input type="text" data-bind="handball.coach"></label>
+          <label class="field">Elnök<input type="text" data-bind="handball.president"></label>
+          <label class="field">Alelnök<input type="text" data-bind="handball.vp"></label>
+        </div>
+        <h3>Játékosok</h3>
+        <div id="edHandball"></div>
+        <div class="btns"><button class="btn" data-add="handball">＋ Új játékos</button></div>
+      </div>
+
+    </div>
+  </section>
+</main>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div id="toast">Mentve ✓</div>
+
+<script>
+const KEY = "munkaneluliek_cfg_v1";
+
+const POS = {
+  football:[["Támadó","Támadók:"],["Középpályás","Középpályások:"],["Védő","Védők:"],["Kapus","Kapus:"]],
+  handball:[["Irányító","Irányítók:"],["Átlövő","Átlövők:"],["Szélső","Szélsők:"],["Beálló","Beállók:"],["Kapus","Kapus:"]]
+};
+const TEAM_KEYS = ["football","handball"];
+
+const DEFAULT = {
+  club:{
+    name:"Munkanélküliek", founded:"2024",
+    slogan:"„Munka nélkül, de győzelemre éhesen!”",
+    sideSlogan:"Munkanélküliek – egy klub, két sportág, egy család!",
+    president:"Prém Botond", vp:"Hordos Bulcsu", seat:"Munkanélküliek Városa",
+    owner:"Klubtulajdonos", logo:""
+  },
+  colors:{accent:"#e9b730", bg:"#060d1f", panel:"#0b1730", text:"#e8edf7"},
+  match:{show:true, sport:"football", date:"2025-05-17T16:00", opponent:"Kónyi Ált. Iskolai Csornai SE", venue:"Munkanélküliek Sportpálya", oppLogo:""},
+  football:{
+    show:true, title:"Focicsapat", president:"Prém Botond", vp:"Hordos Bulcsu", coach:"-",
+    players:[
+      {name:"Prém Botond", pos:"Támadó", photo:""},
+      {name:"Tóth Ádám", pos:"Támadó", photo:""},
+      {name:"Kluiber Csongor", pos:"Támadó", photo:""},
+      {name:"Pálffy Ábel", pos:"Kapus", photo:""},
+      {name:"Hordos Bulcsu", pos:"Védő", photo:""}
+    ]
+  },
+  handball:{
+    show:true, title:"Kézilabda csapat", bigTitle:"Munkanélküliek Kézilabda Csapat",
+    president:"Prém Botond", vp:"Tóth Ádám", coach:"Tóth Ádám", players:[]
+  },
+  matches:[],
+  settings:{
+    fontScale:"normal", compact:false, animations:true, toasts:true,
+    showCountdown:true, dateFormat:"hu", startView:"home",
+    nav:{teams:true, matches:true, stats:true, mgmt:true, transfers:true},
+    pointsWin:3, pointsDraw:1
+  }
+};
+
+const clone = o => JSON.parse(JSON.stringify(o));
+function merge(base, extra){
+  for(const k in extra){
+    if(extra[k] && typeof extra[k]==="object" && !Array.isArray(extra[k]) && base[k]) merge(base[k], extra[k]);
+    else base[k] = extra[k];
+  }
+  return base;
+}
+function load(){
+  try{ const s = localStorage.getItem(KEY); if(s) return merge(clone(DEFAULT), JSON.parse(s)); }catch(e){}
+  return clone(DEFAULT);
+}
+let cfg = load();
+
+function save(){
+  if(!current) return; // vendég nem menthet
+  try{ localStorage.setItem(KEY, JSON.stringify(cfg)); if(cfg.settings.toasts!==false) toast("Mentve ✓"); }
+  catch(e){ toast("Nem sikerült menteni (tele a tárhely?)"); }
+}
+let tt;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),1200);
+}
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const getP=(o,p)=>p.split(".").reduce((a,k)=>a?.[k],o);
+const setP=(o,p,v)=>{const ks=p.split(".");const l=ks.pop();ks.reduce((a,k)=>a[k],o)[l]=v;};
+
+const MONTHS=["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
+function fmtDate(d){
+  const x=new Date(d); if(!d||isNaN(x)) return "–";
+  const p=n=>String(n).padStart(2,"0"), f=cfg.settings.dateFormat, hm=`${p(x.getHours())}:${p(x.getMinutes())}`;
+  if(f==="iso") return `${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())} ${hm}`;
+  if(f==="long") return `${x.getFullYear()}. ${MONTHS[x.getMonth()]} ${x.getDate()}., ${hm}`;
+  return `${x.getFullYear()}.${p(x.getMonth()+1)}.${p(x.getDate())}. ${hm}`;
+}
+function splitName(n){
+  const w=n.trim().split(/\s+/); if(w.length<2) return [n,""];
+  let best=1,diff=1e9;
+  for(let i=1;i<w.length;i++){
+    const d=Math.abs(w.slice(0,i).join(" ").length - w.slice(i).join(" ").length);
+    if(d<diff){diff=d;best=i;}
+  }
+  return [w.slice(0,best).join(" "), w.slice(best).join(" ")];
+}
+
+/* ---------- Megjelenítés ---------- */
+function applyTheme(){
+  const r=document.documentElement.style, c=cfg.colors;
+  r.setProperty("--gold",c.accent); r.setProperty("--bg",c.bg);
+  r.setProperty("--panel",c.panel); r.setProperty("--text",c.text);
+}
+function renderCrests(){
+  // SVG címer szövegei
+  const nm=(cfg.club.name||"").toUpperCase();
+  const cn=$("crestName"); cn.textContent=nm;
+  cn.setAttribute("font-size", Math.max(6,Math.min(17,150/(Math.max(nm.length,1)*0.62))));
+  $("crestYear").textContent=cfg.club.founded;
+  const [a,b]=splitName((cfg.match.opponent||"").toUpperCase());
+  const l1=$("oppL1"), l2=$("oppL2"); l1.textContent=a; l2.textContent=b;
+  [l1,l2].forEach(el=>el.setAttribute("font-size",Math.max(6,Math.min(12,140/(Math.max(el.textContent.length,1)*0.62)))));
+  document.querySelectorAll(".crest-slot").forEach(s=>{
+    const own=s.dataset.crest==="own";
+    const img=own?cfg.club.logo:cfg.match.oppLogo;
+    s.innerHTML = img ? `<img src="${img}" alt="logó">` : `<svg><use href="#${own?"crest":"crest2"}"/></svg>`;
+  });
+}
+function playersHTML(team){
+  const t=cfg[team], groups=POS[team];
+  const card=p=>`<div class="player ${p.pos==="Kapus"?"gk":""}" title="${esc(p.name)}">
+      <div class="ph">${p.photo?`<img src="${p.photo}" alt="">`:`<svg viewBox="0 0 100 80"><use href="#avatar"/></svg>`}</div>
+      <div class="nm">${esc(p.name)}</div></div>`;
+  const out=groups.map(([pos,cap])=>{
+    const ps=t.players.filter(p=>p.pos===pos);
+    return ps.length?`<div class="pgroup"><span class="cap">${cap}</span><div class="row">${ps.map(card).join("")}</div></div>`:"";
+  }).join("");
+  return out || `<span class="empty">Még nincs játékos felvéve.</span>`;
+}
+function renderHome(){
+  const c=cfg.club, m=cfg.match, f=cfg.football, h=cfg.handball;
+  document.title=c.name+" – Klubkezelő";
+  $("hName").textContent=c.name; $("hSlogan").textContent=c.slogan;
+  $("sideSlogan").textContent=c.sideSlogan;
+  $("iPres").textContent=c.president; $("iVp").textContent=c.vp;
+  $("iSeat").textContent=c.seat; $("iFounded").textContent=c.founded;
+
+  $("cardMatch").style.display=m.show?"":"none";
+  $("mDate").textContent=fmtDate(m.date); $("mVenue").innerHTML=esc(m.venue).replace(/ ([^ ]+)$/,"<br>$1");
+  $("mCaption").textContent=m.date?`${c.name} — ${m.opponent}`:"Nincs kitűzött mérkőzés";
+
+  $("cardFootball").style.display=f.show?"":"none";
+  $("fTitle").textContent=f.title; $("fPres").textContent=f.president;
+  $("fVp").textContent=f.vp; $("fCoach").textContent=f.coach;
+  $("fPlayers").innerHTML=playersHTML("football");
+
+  $("cardHandball").style.display=h.show?"":"none";
+  $("hbTitle").textContent=h.title; $("hbPres").textContent=h.president;
+  $("hbVp").textContent=h.vp; $("hbCoach").textContent=h.coach;
+  $("hbBig").innerHTML=esc(h.bigTitle).replace(/ ([^ ]+)$/,"<br>$1");
+  $("hbPlayers").innerHTML=playersHTML("handball");
+
+  $("teamsTable").innerHTML=`<tr><th>Csapat</th><th>Sportág</th><th>Elnök</th><th>Alelnök</th><th>Edző</th><th>Létszám</th></tr>`+
+    [["football","Labdarúgás"],["handball","Kézilabda"]].map(([k,s])=>
+      `<tr><td>${esc(cfg[k].title)}</td><td><span class="tag">${s}</span></td><td>${esc(cfg[k].president)}</td><td>${esc(cfg[k].vp)}</td><td>${esc(cfg[k].coach)}</td><td>${cfg[k].players.length}</td></tr>`).join("");
+  renderNextMatchBox();
+  renderStats();
+  tick();
+}
+function renderAll(){ applyTheme(); applySettings(); renderCrests(); renderHome(); }
+
+/* ---------- Játékos szerkesztők ---------- */
+function renderPlayerEditors(){
+  TEAM_KEYS.forEach(team=>{
+    const opts=POS[team].map(p=>p[0]);
+    $(team==="football"?"edFootball":"edHandball").innerHTML = cfg[team].players.map((p,i)=>`
+      <div class="prow" data-team="${team}" data-i="${i}">
+        <div class="pthumb">${p.photo?`<img src="${p.photo}" alt="">`:`<svg viewBox="0 0 100 80"><use href="#avatar"/></svg>`}</div>
+        <input type="text" class="pname" value="${esc(p.name)}" placeholder="Játékos neve">
+        <select class="ppos">${opts.map(o=>`<option ${o===p.pos?"selected":""}>${o}</option>`).join("")}</select>
+        <label class="btn sm" title="Fotó feltöltése">📷<input type="file" accept="image/*" hidden class="pphoto"></label>
+        <button class="btn sm danger pdel" title="Törlés">✕</button>
+      </div>`).join("") || `<p class="empty">Még nincs játékos.</p>`;
+  });
+}
+document.addEventListener("input",e=>{
+  const row=e.target.closest(".prow"); if(!row) return;
+  const p=cfg[row.dataset.team].players[row.dataset.i];
+  if(e.target.classList.contains("pname")) p.name=e.target.value;
+  if(e.target.classList.contains("ppos")) p.pos=e.target.value;
+  save(); renderHome(); renderStatEditors();
+});
+document.addEventListener("change",e=>{
+  if(e.target.classList.contains("pphoto")){
+    const row=e.target.closest(".prow"), p=cfg[row.dataset.team].players[row.dataset.i];
+    resizeImage(e.target.files[0],220,d=>{p.photo=d;save();renderEditors();renderHome();});
+  }
+});
+document.addEventListener("click",e=>{
+  const del=e.target.closest(".pdel");
+  if(del){
+    const row=del.closest(".prow");
+    cfg[row.dataset.team].players.splice(row.dataset.i,1);
+    save(); renderEditors(); renderHome(); return;
+  }
+  const add=e.target.closest("[data-add]");
+  if(add){
+    const t=add.dataset.add;
+    cfg[t].players.push({name:"Új játékos",pos:POS[t][0][0],photo:""});
+    save(); renderEditors(); renderHome();
+  }
+});
+
+/* ---------- Képkezelés ---------- */
+function resizeImage(file,max,cb){
+  if(!file) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const s=Math.min(1,max/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      cb(c.toDataURL(file.type==="image/png"?"image/png":"image/jpeg",.85));
+    };
+    img.src=fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+$("logoOwn").onchange=e=>resizeImage(e.target.files[0],300,d=>{cfg.club.logo=d;save();renderCrests();});
+$("logoOpp").onchange=e=>resizeImage(e.target.files[0],300,d=>{cfg.match.oppLogo=d;save();renderCrests();});
+$("logoOwnReset").onclick=()=>{cfg.club.logo="";save();renderCrests();};
+$("logoOppReset").onclick=()=>{cfg.match.oppLogo="";save();renderCrests();};
+
+/* ---------- Űrlap kötés ---------- */
+function syncForm(){
+  document.querySelectorAll("[data-bind]").forEach(el=>{
+    const v=getP(cfg,el.dataset.bind);
+    if(el.type==="checkbox") el.checked=!!v; else el.value=v??"";
+  });
+}
+document.querySelectorAll("[data-bind]").forEach(el=>{
+  el.addEventListener("input",()=>{
+    setP(cfg,el.dataset.bind, el.type==="checkbox"?el.checked:el.value);
+    save(); renderAll();
+  });
+});
+
+/* ---------- Színsémák ---------- */
+const PRESETS={
+  presetGold:{accent:"#e9b730",bg:"#060d1f",panel:"#0b1730",text:"#e8edf7"},
+  presetRed:{accent:"#ff4d4d",bg:"#0d0d0d",panel:"#1a1010",text:"#f2f2f2"},
+  presetGreen:{accent:"#4ade80",bg:"#04120a",panel:"#0a1f14",text:"#e8f5ec"},
+  presetLight:{accent:"#c98a00",bg:"#eef2f8",panel:"#ffffff",text:"#17213a"}
+};
+Object.keys(PRESETS).forEach(id=>$(id).onclick=()=>{
+  Object.assign(cfg.colors,PRESETS[id]); save(); syncForm(); renderAll();
+});
+
+/* ---------- Export / import / reset ---------- */
+$("btnExport").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(cfg,null,2)],{type:"application/json"}));
+  a.download="klub-beallitasok.json"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("btnImport").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{ cfg=merge(clone(DEFAULT),JSON.parse(fr.result)); save(); syncForm(); renderEditors(); renderAll(); }
+    catch(err){ alert("Hibás fájl, az importálás nem sikerült."); }
+  };
+  fr.readAsText(f); e.target.value="";
+};
+$("btnReset").onclick=()=>{
+  if(!confirm("Biztosan visszaállítod az összes beállítást az alaphelyzetre?")) return;
+  cfg=clone(DEFAULT); try{localStorage.removeItem(KEY);}catch(e){}
+  syncForm(); renderEditors(); renderAll(); toast("Alaphelyzet visszaállítva");
+};
+
+/* ---------- Navigáció ---------- */
+document.querySelectorAll("#nav button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    $("view-"+b.dataset.view).classList.add("active");
+  };
+});
+
+/* ---------- Visszaszámláló ---------- */
+function tick(){
+  const el=$("countdown"), t=new Date(cfg.match.date), d=t-new Date();
+  if(!cfg.match.date||isNaN(t)||!cfg.settings.showCountdown){el.textContent="";return;}
+  if(d<=0){ el.textContent="A mérkőzés lezajlott / folyamatban van"; return; }
+  const days=Math.floor(d/864e5), h=Math.floor(d/36e5)%24, m=Math.floor(d/6e4)%60;
+  el.textContent=`⏱ ${days} nap ${h} óra ${m} perc a kezdésig`;
+}
+setInterval(tick,30000);
+
+/* ---------- Beállítások alkalmazása ---------- */
+function go(v){ const b=document.querySelector(`#nav button[data-view="${v}"]`); if(b) b.click(); }
+function applySettings(){
+  applyPerms();
+  const s=cfg.settings;
+  document.body.classList.toggle("compact",!!s.compact);
+  document.body.classList.toggle("noanim",!s.animations);
+  document.querySelector("main").style.zoom=({small:.9,normal:1,large:1.12})[s.fontScale]||1;
+  document.querySelectorAll("#nav button").forEach(b=>{
+    const k=b.dataset.view;
+    if(k in s.nav) b.style.display=s.nav[k]?"":"none";
+  });
+  const act=document.querySelector("#nav button.active");
+  if(act && act.style.display==="none") go("home");
+}
+
+/* ---------- Mérkőzések ---------- */
+const SPORT_NAME={football:"Labdarúgás",handball:"Kézilabda"};
+const num=v=>{const n=parseInt(v,10);return isNaN(n)?0:n;};
+const isPlayed=m=>String(m.us??"").trim()!==""&&String(m.them??"").trim()!=="";
+const res=m=>num(m.us)>num(m.them)?"W":num(m.us)<num(m.them)?"L":"D";
+const RES_TXT={W:"Győzelem",D:"Döntetlen",L:"Vereség"};
+const resTag=m=>isPlayed(m)?RES_TXT[res(m)]:"Nincs eredmény";
+function st(p){ if(!p.stats) p.stats={gp:0,goals:0,assists:0,yc:0,rc:0}; return p.stats; }
+function localInput(d){
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function renderNextMatchBox(){
+  const m=cfg.match, box=$("nextMatchBox"); if(!box) return;
+  if(!m.date){ box.innerHTML=`<p class="empty">Nincs kitűzött mérkőzés. A Testreszabás fülön adhatsz meg újat.</p>`; return; }
+  box.innerHTML=`<div class="kv small">
+      <span class="k">Időpont:</span><span class="v">${esc(fmtDate(m.date))}</span>
+      <span class="k">Ellenfél:</span><span class="v">${esc(m.opponent)}</span>
+      <span class="k">Helyszín:</span><span class="v">${esc(m.venue)}</span>
+      <span class="k">Sportág:</span><span class="v">${SPORT_NAME[m.sport]||"-"}</span></div>
+    ${can("matches")?`<div class="btns"><button class="btn" id="recordNext">✔ Eredmény rögzítése</button></div>`:""}`;
+}
+function renderMatchesEditor(){
+  const box=$("matchesEditor"); if(!box) return;
+  cfg.matches.sort((a,b)=>(new Date(b.date)||0)-(new Date(a.date)||0));
+  const head=`<div class="mrow mhead"><span>Időpont</span><span>Sportág</span><span>Ellenfél</span><span>Pálya</span><span>Helyszín</span><span>Mi</span><span>Ők</span><span>Eredmény</span><span></span></div>`;
+  box.innerHTML = cfg.matches.length ? head+cfg.matches.map((m,i)=>`
+    <div class="mrow" data-i="${i}">
+      <input type="datetime-local" data-f="date" value="${esc(m.date)}">
+      <select data-f="sport">${Object.entries(SPORT_NAME).map(([k,v])=>`<option value="${k}" ${m.sport===k?"selected":""}>${v}</option>`).join("")}</select>
+      <input type="text" data-f="opponent" value="${esc(m.opponent)}" placeholder="Ellenfél">
+      <select data-f="home"><option value="1" ${m.home!==false?"selected":""}>Hazai</option><option value="0" ${m.home===false?"selected":""}>Idegenben</option></select>
+      <input type="text" data-f="venue" value="${esc(m.venue)}" placeholder="Helyszín">
+      <input type="number" min="0" data-f="us" value="${esc(m.us)}">
+      <input type="number" min="0" data-f="them" value="${esc(m.them)}">
+      <span class="tag mres">${resTag(m)}</span>
+      <button class="btn sm danger mdel" title="Törlés">✕</button>
+    </div>`).join("") : `<p class="empty">Még nincs mérkőzés felvéve.</p>`;
+}
+document.addEventListener("input",e=>{
+  const row=e.target.closest(".mrow[data-i]");
+  if(row && e.target.dataset.f){
+    const m=cfg.matches[row.dataset.i], f=e.target.dataset.f;
+    m[f]= f==="home" ? e.target.value==="1" : e.target.value;
+    row.querySelector(".mres").textContent=resTag(m);
+    save(); renderHome(); renderStatEditors();
+    return;
+  }
+  const sr=e.target.closest(".srow[data-team]");
+  if(sr && e.target.dataset.k){
+    st(cfg[sr.dataset.team].players[sr.dataset.i])[e.target.dataset.k]=Math.max(0,num(e.target.value));
+    save(); renderStats();
+  }
+});
+document.addEventListener("click",e=>{
+  if(e.target.closest("#addMatch")){
+    cfg.matches.push({id:Date.now(),date:localInput(new Date()),sport:"football",opponent:"",venue:"",home:true,us:"",them:""});
+    save(); renderMatchesEditor(); renderHome(); return;
+  }
+  const del=e.target.closest(".mdel");
+  if(del){
+    cfg.matches.splice(del.closest(".mrow").dataset.i,1);
+    save(); renderMatchesEditor(); renderHome(); return;
+  }
+  if(e.target.closest("#recordNext")){
+    const m=cfg.match;
+    const us=prompt(`Hány gólt szerzett a(z) ${cfg.club.name}?`,"0"); if(us===null) return;
+    const th=prompt(`Hány gólt szerzett az ellenfél (${m.opponent})?`,"0"); if(th===null) return;
+    if(!/^\d+$/.test(us.trim())||!/^\d+$/.test(th.trim())){ alert("Kérlek, egész számot adj meg."); return; }
+    cfg.matches.push({id:Date.now(),date:m.date,sport:m.sport||"football",opponent:m.opponent,venue:m.venue,home:true,us:us.trim(),them:th.trim()});
+    m.date=""; save(); syncForm(); renderMatchesEditor(); renderAll(); return;
+  }
+  if(e.target.closest("#demoData")) loadDemo();
+  if(e.target.closest("#clearStats")){
+    if(!confirm("Biztosan törlöd az összes mérkőzést és játékosstatisztikát?")) return;
+    cfg.matches=[];
+    TEAM_KEYS.forEach(t=>cfg[t].players.forEach(p=>{p.stats={gp:0,goals:0,assists:0,yc:0,rc:0};}));
+    save(); renderEditors(); renderAll();
+  }
+});
+
+/* ---------- Statisztikák ---------- */
+let statSport="all";
+$("statSport").onchange=e=>{statSport=e.target.value;renderStats();};
+
+function renderStats(){
+  const out=$("statsOut"); if(!out) return;
+  const sel=cfg.matches.filter(m=>isPlayed(m)&&(statSport==="all"||m.sport===statSport))
+    .sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const n=sel.length;
+  const W=sel.filter(m=>res(m)==="W").length, D=sel.filter(m=>res(m)==="D").length, L=n-W-D;
+  const gf=sel.reduce((a,m)=>a+num(m.us),0), ga=sel.reduce((a,m)=>a+num(m.them),0);
+  const pts=W*num(cfg.settings.pointsWin)+D*num(cfg.settings.pointsDraw);
+  const kpi=(v,l)=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
+  let html=`<div class="kpis">${kpi(n,"Mérkőzés")}${kpi(W,"Győzelem")}${kpi(D,"Döntetlen")}${kpi(L,"Vereség")}
+    ${kpi(gf+":"+ga,"Gólarány")}${kpi((gf-ga>0?"+":"")+(gf-ga),"Gólkülönbség")}${kpi(pts,"Pont")}
+    ${kpi((n?Math.round(W/n*100):0)+"%","Győzelmi arány")}${kpi(n?(gf/n).toFixed(1):"0.0","Gól / meccs")}</div>`;
+
+  if(!n){
+    html+=`<div class="card"><p class="empty">Még nincs rögzített eredmény. Vedd fel a Mérkőzések fülön, vagy próbáld ki a „Mintaadatok betöltése" gombbal.</p></div>`;
+  }else{
+    // forma + legutóbbi eredmények
+    const wdl=`<div class="wdl"><div style="width:${W/n*100}%;background:#4ade80">${W||""}</div><div style="width:${D/n*100}%;background:#fbbf24">${D||""}</div><div style="width:${L/n*100}%;background:#f87171">${L||""}</div></div>`;
+    const chips=sel.slice(-5).map(m=>`<span class="chip ${res(m)}">${{W:"G",D:"D",L:"V"}[res(m)]}</span>`).join("");
+    const recent=sel.slice(-5).reverse().map(m=>`<div><small>${esc(fmtDate(m.date))}</small><span class="chip ${res(m)}" style="width:22px;height:22px;font-size:11px">${{W:"G",D:"D",L:"V"}[res(m)]}</span>
+      <span>${esc(cfg.club.name)} <b>${num(m.us)}:${num(m.them)}</b> ${esc(m.opponent||"?")}</span></div>`).join("");
+    // gólok diagram
+    const last=sel.slice(-10), H=190, Wd=600, pad=20, base=H-34, top=22;
+    const mx=Math.max(3,...last.flatMap(m=>[num(m.us),num(m.them)]));
+    const step=(Wd-pad*2)/last.length, bw=Math.min(24,step/2.4), hh=v=>(v/mx)*(base-top);
+    const bars=last.map((m,i)=>{
+      const cx=pad+step*i+step/2, a=num(m.us), b=num(m.them);
+      return `<rect x="${cx-bw-1}" y="${base-hh(a)}" width="${bw}" height="${hh(a)}" rx="3" style="fill:var(--gold)"/>
+        <text x="${cx-bw/2-1}" y="${base-hh(a)-4}" text-anchor="middle" font-size="11" style="fill:var(--text)">${a}</text>
+        <rect x="${cx+1}" y="${base-hh(b)}" width="${bw}" height="${hh(b)}" rx="3" style="fill:#f87171"/>
+        <text x="${cx+bw/2+1}" y="${base-hh(b)-4}" text-anchor="middle" font-size="11" style="fill:var(--text)">${b}</text>
+        <text x="${cx}" y="${H-16}" text-anchor="middle" font-size="10" style="fill:var(--muted)">${esc((m.opponent||"?").slice(0,9))}</text>`;
+    }).join("");
+    html+=`<div class="grid">
+      <div class="card"><h2>📈 Forma és eredmények</h2>
+        <div class="form-chips">${chips}</div>${wdl}<div class="recent">${recent}</div></div>
+      <div class="card"><h2>⚽ Gólok mérkőzésenként</h2>
+        <svg viewBox="0 0 ${Wd} ${H}" style="width:100%;height:auto"><line x1="${pad}" x2="${Wd-pad}" y1="${base}" y2="${base}" style="stroke:var(--line)"/>${bars}</svg>
+        <div class="hint"><span style="color:var(--gold)">■</span> Rúgott &nbsp; <span style="color:#f87171">■</span> Kapott (utolsó ${last.length} meccs)</div></div>
+    </div>`;
+  }
+
+  // ranglisták a játékos statisztikákból
+  const teams=statSport==="all"?TEAM_KEYS:[statSport];
+  const rows=teams.flatMap(t=>cfg[t].players.map(p=>({name:p.name,team:t,...st(p)})));
+  const lb=(title,icon,key)=>{
+    const top=rows.filter(r=>r[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,5);
+    const mx=top.length?top[0][key]:1;
+    return `<div class="card"><h2>${icon} ${title}</h2>`+(top.length
+      ? `<div class="lead">${top.map((r,i)=>`<div class="lrow"><b>${i+1}.</b><div>${esc(r.name)} ${statSport==="all"?`<small>· ${SPORT_NAME[r.team]}</small>`:""}</div><span class="val">${r[key]}</span><div class="bar"><i style="width:${r[key]/mx*100}%"></i></div></div>`).join("")}</div>`
+      : `<p class="empty">Nincs adat.</p>`)+`</div>`;
+  };
+  html+=`<div class="grid" style="margin-top:16px">${lb("Gólkirályok","⚽","goals")}${lb("Gólpasszok","🎯","assists")}${lb("Sárga lapok","🟨","yc")}${lb("Piros lapok","🟥","rc")}</div>`;
+  out.innerHTML=html;
+}
+function renderStatEditors(){
+  const box=$("statEditor"); if(!box) return;
+  const heads=["Játékos","Meccs","Gól","Gólpassz","Sárga","Piros"];
+  let html=`<div class="srow mhead">${heads.map(h=>`<span>${h}</span>`).join("")}</div>`, any=false;
+  TEAM_KEYS.forEach(t=>cfg[t].players.forEach((p,i)=>{
+    any=true; const s=st(p);
+    html+=`<div class="srow" data-team="${t}" data-i="${i}"><span>${esc(p.name)} <small class="tag">${SPORT_NAME[t]}</small></span>`+
+      ["gp","goals","assists","yc","rc"].map(k=>`<input type="number" min="0" data-k="${k}" value="${s[k]}">`).join("")+`</div>`;
+  }));
+  box.innerHTML=any?html:`<p class="empty">Először vegyél fel játékosokat a Testreszabás fülön.</p>`;
+}
+function loadDemo(){
+  if(!confirm("Mintaadatokat adok hozzá a mérkőzésekhez és a játékos statisztikákhoz. Folytatod?")) return;
+  [["2025-03-08T15:00","football","Győri Villámok","3","1"],["2025-03-22T16:00","football","Csornai Sasok","2","2"],
+   ["2025-04-05T15:30","football","Kónyi Bikák","0","1"],["2025-04-19T16:00","football","Sopron Ifi","4","0"],
+   ["2025-05-03T16:00","football","Mosonmagyaróvári Nyilak","1","0"],["2025-03-15T18:00","handball","Győr KC Ifi","27","24"],
+   ["2025-04-12T18:00","handball","Csorna Kézi","22","25"],["2025-04-26T18:00","handball","Kóny Kézi","30","30"]
+  ].forEach(([d,s,o,u,t])=>cfg.matches.push({id:Date.now()+Math.random(),date:d,sport:s,opponent:o,venue:"",home:true,us:u,them:t}));
+  const S={"Prém Botond":{gp:5,goals:4,assists:2,yc:1,rc:0},"Tóth Ádám":{gp:5,goals:3,assists:3,yc:0,rc:0},
+    "Kluiber Csongor":{gp:4,goals:2,assists:1,yc:2,rc:1},"Pálffy Ábel":{gp:5,goals:0,assists:0,yc:1,rc:0},"Hordos Bulcsu":{gp:5,goals:1,assists:2,yc:3,rc:0}};
+  cfg.football.players.forEach(p=>{ if(S[p.name]) Object.assign(st(p),S[p.name]); });
+  save(); renderEditors(); renderAll();
+}
+function renderEditors(){ renderPlayerEditors(); renderMatchesEditor(); renderStatEditors(); applyPerms(); }
+
+/* ---------- Felhasználók és jogosultságok ---------- */
+const AUTH_KEY="munkaneluliek_auth_v1";
+let auth=(()=>{ try{ const a=JSON.parse(localStorage.getItem(AUTH_KEY)); if(a&&Array.isArray(a.users)) return a; }catch(e){} return {users:[]}; })();
+let current=null;
+function saveAuth(){ try{ localStorage.setItem(AUTH_KEY,JSON.stringify(auth)); }catch(e){ alert("Nem sikerült menteni a felhasználókat."); } }
+// area: "owner" | "content" | "matches"
+function can(area){
+  if(!current) return false;
+  if(current.role==="owner") return true;
+  if(area==="owner") return false;
+  return !!(current.perms&&current.perms[area]);
+}
+function rnd(){
+  const a=new Uint8Array(16);
+  try{ crypto.getRandomValues(a); }catch(e){ for(let i=0;i<16;i++) a[i]=Math.floor(Math.random()*256); }
+  return Array.from(a,b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function hashPw(pw,salt){
+  try{
+    if(window.crypto&&crypto.subtle){
+      const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+      const b=await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations:100000,hash:"SHA-256"},k,256);
+      return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("");
+    }
+  }catch(e){}
+  let h=5381; const s=salt+pw;
+  for(let r=0;r<2000;r++) for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
+  return "f"+(h>>>0).toString(16);
+}
+function setSession(u,remember){
+  try{ sessionStorage.setItem("mn_sess",u.id); if(remember) localStorage.setItem("mn_sess",u.id); }catch(e){}
+}
+function loadSession(){
+  let id=null; try{ id=sessionStorage.getItem("mn_sess")||localStorage.getItem("mn_sess"); }catch(e){}
+  current=auth.users.find(u=>u.id===id)||null;
+}
+function logout(){
+  try{ sessionStorage.removeItem("mn_sess"); localStorage.removeItem("mn_sess"); }catch(e){}
+  current=null; afterAuth(); toast("Kijelentkeztél");
+}
+function afterAuth(){ renderAll(); renderEditors(); }
+
+function openModal(html){
+  $("modal").innerHTML=html; $("modalBg").classList.add("show");
+  const f=$("modal").querySelector("input"); if(f) setTimeout(()=>f.focus(),30);
+}
+function closeModal(){ $("modalBg").classList.remove("show"); $("modal").innerHTML=""; }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let failCount=0, lockUntil=0;
+
+function showSetup(){
+  openModal(`<h2>👑 Tulajdonos létrehozása</h2>
+    <p>Ez lesz a fő fiók: mindent szerkeszthet, és másoknak is adhat engedélyt. Jegyezd meg a jelszót, mert nincs jelszó-visszaállítás.</p>
+    <form id="fSetup">
+      <label class="field">Neved<input type="text" id="suName" autocomplete="name"></label>
+      <label class="field">Felhasználónév<input type="text" id="suUser" autocomplete="username"></label>
+      <label class="field">Jelszó (min. 8 karakter)<input type="password" id="suPw" autocomplete="new-password"></label>
+      <label class="field">Jelszó újra<input type="password" id="suPw2" autocomplete="new-password"></label>
+      <div class="err" id="suE"></div>
+      <div class="btns"><button class="btn" type="submit">Létrehozás</button><button class="btn danger" type="button" data-close>Később</button></div>
+    </form>`);
+  $("fSetup").onsubmit=async ev=>{
+    ev.preventDefault();
+    const err=t=>{$("suE").textContent=t;};
+    const name=$("suName").value.trim(), un=$("suUser").value.trim(), pw=$("suPw").value;
+    if(!name) return err("Add meg a neved.");
+    if(un.length<3) return err("A felhasználónév legalább 3 karakter legyen.");
+    if(pw.length<8) return err("A jelszó legalább 8 karakter legyen.");
+    if(pw!==$("suPw2").value) return err("A két jelszó nem egyezik.");
+    const salt=rnd(), u={id:rnd(),username:un,name,role:"owner",perms:{content:true,matches:true},salt,hash:await hashPw(pw,salt)};
+    auth.users.push(u); saveAuth(); current=u; setSession(u,false);
+    closeModal(); afterAuth(); toast("Tulajdonos létrehozva");
+  };
+}
+function showLogin(){
+  if(!auth.users.length) return showSetup();
+  openModal(`<h2>🔐 Belépés</h2>
+    <p>Az oldalt csak engedéllyel rendelkező felhasználók szerkeszthetik.</p>
+    <form id="fLogin">
+      <label class="field">Felhasználónév<input type="text" id="lgU" autocomplete="username"></label>
+      <label class="field">Jelszó<input type="password" id="lgP" autocomplete="current-password"></label>
+      <label class="check"><input type="checkbox" id="lgR"> Maradjak bejelentkezve ezen az eszközön</label>
+      <div class="err" id="lgE"></div>
+      <div class="btns"><button class="btn" type="submit">Belépés</button><button class="btn danger" type="button" data-close>Mégse</button></div>
+    </form>`);
+  $("fLogin").onsubmit=async ev=>{
+    ev.preventDefault();
+    if(Date.now()<lockUntil){ $("lgE").textContent=`Túl sok próbálkozás, várj ${Math.ceil((lockUntil-Date.now())/1000)} mp-et.`; return; }
+    const un=$("lgU").value.trim().toLowerCase();
+    const u=auth.users.find(x=>x.username.toLowerCase()===un);
+    const ok=u && (await hashPw($("lgP").value,u.salt))===u.hash;
+    if(!ok){
+      await sleep(700);
+      if(++failCount>=5){ lockUntil=Date.now()+30000; failCount=0; }
+      $("lgE").textContent="Hibás felhasználónév vagy jelszó."; return;
+    }
+    failCount=0; current=u; setSession(u,$("lgR").checked);
+    closeModal(); afterAuth(); toast("Üdv, "+u.name+"!");
+  };
+}
+function showPwModal(u,self){
+  openModal(`<h2>🔑 ${self?"Jelszó módosítása":"Új jelszó: "+esc(u.name)}</h2>
+    <form id="fPw">
+      ${self?`<label class="field">Jelenlegi jelszó<input type="password" id="pwOld" autocomplete="current-password"></label>`:""}
+      <label class="field">Új jelszó (min. 8 karakter)<input type="password" id="pwNew" autocomplete="new-password"></label>
+      <label class="field">Új jelszó újra<input type="password" id="pwNew2" autocomplete="new-password"></label>
+      <div class="err" id="pwE"></div>
+      <div class="btns"><button class="btn" type="submit">Mentés</button><button class="btn danger" type="button" data-close>Mégse</button></div>
+    </form>`);
+  $("fPw").onsubmit=async ev=>{
+    ev.preventDefault();
+    const err=t=>{$("pwE").textContent=t;};
+    if(self && (await hashPw($("pwOld").value,u.salt))!==u.hash) return err("A jelenlegi jelszó hibás.");
+    const n=$("pwNew").value;
+    if(n.length<8) return err("A jelszó legalább 8 karakter legyen.");
+    if(n!==$("pwNew2").value) return err("A két jelszó nem egyezik.");
+    u.salt=rnd(); u.hash=await hashPw(n,u.salt); saveAuth(); closeModal(); toast("Jelszó módosítva");
+  };
+}
+
+function updateAuthUI(){
+  $("hMode").textContent = !current ? "👁 Vendég nézet (csak olvasható)" : current.role==="owner" ? "👑 Tulajdonosi felület" : "✏️ Szerkesztői felület";
+  $("hOwner").textContent = current ? current.name : "Vendég";
+  $("btnPw").style.display = current ? "" : "none";
+  $("btnAuth").textContent = current ? "⎋ Kijelentkezés" : (auth.users.length ? "🔐 Belépés" : "👑 Tulajdonos létrehozása");
+}
+function applyPerms(){
+  const nb=k=>document.querySelector(`#nav button[data-view="${k}"]`);
+  nb("custom").style.display=can("content")?"":"none";
+  nb("settings").style.display=can("owner")?"":"none";
+  const dm=$("btnExport").closest(".card"); if(dm) dm.dataset.area="owner";
+  document.querySelectorAll("[data-area]").forEach(el=>{
+    const ok=can(el.dataset.area);
+    el.classList.toggle("locked",!ok);
+    if(el.matches("input,select,button,textarea")) el.disabled=!ok;
+    el.querySelectorAll("input,select,button,textarea").forEach(c=>{c.disabled=!ok;});
+  });
+  const se=$("statEditor").closest(".card"); if(se) se.style.display=can("matches")?"":"none";
+  updateAuthUI();
+  if(can("owner")) renderUsers();
+}
+function renderUsers(){
+  const box=$("userList"); if(!box) return;
+  box.innerHTML=auth.users.map(u=>`<div class="urow" data-id="${u.id}">
+      <div><b>${esc(u.name)}</b> <small>@${esc(u.username)}</small> ${u.role==="owner"?`<span class="tag">Tulajdonos</span>`:""}</div>
+      ${u.role==="owner"?`<small>Teljes hozzáférés</small>`:`
+        <label class="check sm"><input type="checkbox" data-perm="content" ${u.perms.content?"checked":""}> Tartalom (Testreszabás)</label>
+        <label class="check sm"><input type="checkbox" data-perm="matches" ${u.perms.matches?"checked":""}> Mérkőzések és statisztika</label>`}
+      <div class="btns" style="margin:0"><button class="btn sm" data-pw>🔑 Új jelszó</button>${u.role!=="owner"?`<button class="btn sm danger" data-del>✕</button>`:""}</div>
+    </div>`).join("");
+}
+
+// Védelem: jogosulatlan felhasználó eseményei le vannak tiltva a szerkesztő területeken
+["input","change","click","submit"].forEach(ev=>document.addEventListener(ev,e=>{
+  const a=e.target.closest&&e.target.closest("[data-area]");
+  if(a && !can(a.dataset.area)){ e.stopImmediatePropagation(); e.preventDefault(); }
+},true));
+
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-close]")) closeModal();
+  const row=e.target.closest(".urow"); if(!row||!can("owner")) return;
+  const u=auth.users.find(x=>x.id===row.dataset.id); if(!u) return;
+  if(e.target.closest("[data-pw]")) showPwModal(u,false);
+  if(e.target.closest("[data-del]") && u.role!=="owner" && confirm(`Biztosan törlöd a felhasználót: ${u.name}?`)){
+    auth.users=auth.users.filter(x=>x!==u); saveAuth(); renderUsers(); toast("Felhasználó törölve");
+  }
+});
+document.addEventListener("change",e=>{
+  const cb=e.target.closest("[data-perm]"); if(!cb||!can("owner")) return;
+  const u=auth.users.find(x=>x.id===cb.closest(".urow").dataset.id);
+  if(!u||u.role==="owner") return;
+  u.perms[cb.dataset.perm]=cb.checked; saveAuth(); toast("Jogosultság frissítve");
+});
+$("fNewUser").onsubmit=async ev=>{
+  ev.preventDefault(); if(!can("owner")) return;
+  const name=$("nuName").value.trim(), un=$("nuUser").value.trim(), pw=$("nuPw").value;
+  if(!name||un.length<3) return alert("Adj meg nevet és legalább 3 karakteres felhasználónevet.");
+  if(pw.length<8) return alert("A jelszó legalább 8 karakter legyen.");
+  if(auth.users.some(u=>u.username.toLowerCase()===un.toLowerCase())) return alert("Ez a felhasználónév már foglalt.");
+  const salt=rnd();
+  auth.users.push({id:rnd(),username:un,name,role:"editor",perms:{content:$("nuC").checked,matches:$("nuM").checked},salt,hash:await hashPw(pw,salt)});
+  saveAuth(); ev.target.reset(); $("nuM").checked=true; renderUsers(); toast("Felhasználó létrehozva");
+};
+$("btnAuth").onclick=()=>current?logout():showLogin();
+$("btnPw").onclick=()=>current&&showPwModal(current,true);
+
+/* ---------- Indítás ---------- */
+loadSession();
+syncForm(); renderEditors(); renderAll();
+{ const sv=cfg.settings.startView; if(sv && sv!=="home" && cfg.settings.nav[sv]!==false) go(sv); }
+if(!auth.users.length) showSetup();
+</script>
+</body>
+</html>
